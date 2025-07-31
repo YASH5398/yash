@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'crypto-blue': '#1e40af',
+                        'crypto-gold': '#f59e0b',
+                        'profit-green': '#10b981',
+                        'loss-red': '#ef4444',
+                        'dark-bg': '#0f172a',
+                        'dark-card': '#1e293b',
+                        'dark-border': '#334155'
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+      .glass-card {
+        background: linear-gradient(135deg, rgba(255,255,255,0.35) 0%, rgba(255,255,255,0.18) 100%);
+        backdrop-filter: blur(18px);
+        border: 1px solid rgba(255,255,255,0.22);
+        box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+        transition: box-shadow 0.2s;
+      }
+      .glass-card:hover {
+        box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.18);
+      }
+    </style>
+</head>
+<body class="bg-gray-50 dark:bg-dark-bg min-h-screen transition-colors duration-300">
+    <!-- Loading Spinner -->
+    <div id="loading" class="fixed inset-0 bg-white dark:bg-dark-bg bg-opacity-90 flex items-center justify-center z-50">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-b-2 border-crypto-blue mx-auto mb-4"></div>
+            <p class="text-gray-600 dark:text-gray-300">Loading...</p>
+        </div>
+    </div>
+
+    <!-- Authentication Section -->
+    <div id="auth-section" class="hidden min-h-screen flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-dark-card rounded-2xl shadow-xl p-8 w-full max-w-md border dark:border-dark-border">
+            <div class="text-center mb-8">
+                <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-2">Crypto Trading Dashboard</h1>
+                <p class="text-gray-600 dark:text-gray-300">Track your crypto trading performance</p>
+            </div>
+
+            <!-- Login Form -->
+            <div id="login-form" class="space-y-6">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center">Sign In</h2>
+                
+                <!-- Email/Password Login -->
+                <form id="email-login" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <input type="email" id="login-email" required 
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                        <input type="password" id="login-password" required
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <button type="submit" id="email-login-btn"
+                            class="w-full bg-crypto-blue text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+                        Sign In with Email
+                    </button>
+                </form>
+
+                <!-- Social Login Buttons -->
+                <div class="space-y-3">
+                    <button id="google-login-btn"
+                            class="w-full bg-red-600 text-white py-3 rounded-lg font-semibold hover:bg-red-700 transition duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                        </svg>
+                        Sign In with Google
+                    </button>
+
+                    <button id="phone-login-btn"
+                            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200 flex items-center justify-center">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                        </svg>
+                        Sign In with Phone
+                    </button>
+                </div>
+
+                <p class="text-center text-gray-600 dark:text-gray-300">
+                    Don't have an account? 
+                    <button id="show-signup" class="text-crypto-blue hover:underline font-semibold">Sign Up</button>
+                </p>
+            </div>
+
+            <!-- Signup Form -->
+            <div id="signup-form" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center">Sign Up</h2>
+                <form id="email-signup" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <input type="email" id="signup-email" required
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
+                        <input type="password" id="signup-password" required minlength="6"
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <button type="submit" id="email-signup-btn"
+                            class="w-full bg-crypto-gold text-white py-3 rounded-lg font-semibold hover:bg-yellow-600 transition duration-200">
+                        Create Account
+                    </button>
+                </form>
+                <p class="text-center text-gray-600 dark:text-gray-300">
+                    Already have an account? 
+                    <button id="show-login" class="text-crypto-blue hover:underline font-semibold">Sign In</button>
+                </p>
+            </div>
+
+            <!-- Phone Verification -->
+            <div id="phone-verification" class="space-y-6 hidden">
+                <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center">Phone Verification</h2>
+                <div id="recaptcha-container"></div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone Number</label>
+                        <input type="tel" id="phone-number" placeholder="+1234567890"
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <button id="send-code-btn"
+                            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+                        Send Verification Code
+                    </button>
+                </div>
+                
+                <div id="verification-code-section" class="hidden space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Verification Code</label>
+                        <input type="text" id="verification-code" placeholder="123456"
+                               class="w-full px-4 py-3 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                    </div>
+                    <button id="verify-code-btn"
+                            class="w-full bg-green-600 text-white py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-200">
+                        Verify Code
+                    </button>
+                </div>
+                
+                <button id="back-to-login" class="w-full text-crypto-blue hover:underline">
+                    Back to Login
+                </button>
+            </div>
+
+            <!-- Error Message -->
+            <div id="auth-error" class="hidden mt-4 p-3 bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-600 text-red-700 dark:text-red-300 rounded-lg text-sm"></div>
+        </div>
+    </div>
+
+    <!-- Main App Section -->
+    <div id="app-section" class="hidden">
+        <!-- Header -->
+        <header class="bg-white dark:bg-dark-card shadow-sm border-b dark:border-dark-border">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Crypto Trading Dashboard</h1>
+                    <div class="flex items-center space-x-4">
+                        <!-- Dark Mode Toggle -->
+                        <button id="dark-mode-toggle" class="p-2 rounded-lg bg-gray-100 dark:bg-dark-bg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                            <svg id="sun-icon" class="w-5 h-5 text-gray-600 dark:text-gray-300 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                            </svg>
+                            <svg id="moon-icon" class="w-5 h-5 text-gray-600 dark:text-gray-300 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+                            </svg>
+                        </button>
+                        
+                        <!-- Navigation -->
+                        <nav class="flex space-x-4">
+                            <button id="dashboard-tab" class="px-3 py-2 rounded-lg bg-crypto-blue text-white font-medium">Dashboard</button>
+                            <button id="settings-tab" class="px-3 py-2 rounded-lg text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-dark-bg font-medium">Settings</button>
+                        </nav>
+                        
+                        <span id="user-email" class="text-sm text-gray-600 dark:text-gray-300"></span>
+                        <button id="logout-btn" class="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition duration-200">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Dashboard Content -->
+        <div id="dashboard-content" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <!-- Weex Account Data Section -->
+            <div class="mb-8">
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Weex Account Data</h2>
+                
+                <!-- Balance Card -->
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 mb-6 border dark:border-dark-border">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">USDT Balance</h3>
+                            <p id="usdt-balance" class="text-3xl font-bold text-crypto-gold">Loading...</p>
+                        </div>
+                        <div class="p-3 rounded-full bg-yellow-100 dark:bg-yellow-900">
+                            <svg class="w-8 h-8 text-crypto-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Open Orders and Positions Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Open Orders -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 border dark:border-dark-border">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Open Orders</h3>
+                        <div id="open-orders-table" class="overflow-x-auto">
+                            <div class="flex items-center justify-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-crypto-blue"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Positions -->
+                    <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 border dark:border-dark-border">
+                        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Positions</h3>
+                        <div id="positions-table" class="overflow-x-auto">
+                            <div class="flex items-center justify-center py-8">
+                                <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-crypto-blue"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trade Performance Section -->
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Trade Performance</h2>
+                
+                <!-- Performance Stats -->
+                <div class="w-full mb-8">
+                  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Card 1: Total Trades -->
+                    <div class="glass-card flex flex-col items-center p-8 rounded-2xl shadow-2xl">
+                      <span class="text-4xl mb-3" aria-hidden="true">📊</span>
+                      <span class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">Total Trades</span>
+                      <span class="text-3xl font-extrabold text-gray-900 dark:text-white" id="total-trades">0</span>
+                            </div>
+                    <!-- Card 2: Total Profit -->
+                    <div class="glass-card flex flex-col items-center p-8 rounded-2xl shadow-2xl">
+                      <span class="text-4xl mb-3" aria-hidden="true">💰</span>
+                      <span class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">Total Profit</span>
+                      <span class="text-3xl font-extrabold text-profit-green" id="total-profit">₹0</span>
+                    </div>
+                    <!-- Card 3: Total Loss -->
+                    <div class="glass-card flex flex-col items-center p-8 rounded-2xl shadow-2xl">
+                      <span class="text-4xl mb-3" aria-hidden="true">🔻</span>
+                      <span class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">Total Loss</span>
+                      <span class="text-3xl font-extrabold text-loss-red" id="total-loss">₹0</span>
+                    </div>
+                    <!-- Card 4: Net Profit -->
+                    <div class="glass-card flex flex-col items-center p-8 rounded-2xl shadow-2xl">
+                      <span class="text-4xl mb-3" aria-hidden="true">📈</span>
+                      <span class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">Net Profit</span>
+                      <span class="text-3xl font-extrabold text-crypto-blue dark:text-crypto-gold" id="net-profit">₹0</span>
+                    </div>
+                    <!-- Card 5: Total Future Balance -->
+                    <div class="glass-card flex flex-col items-center p-8 rounded-2xl shadow-2xl">
+                      <span class="text-4xl mb-3" aria-hidden="true">🪙</span>
+                      <span class="text-base font-semibold text-gray-700 dark:text-gray-200 mb-1">Total Future Balance</span>
+                      <span class="text-3xl font-extrabold text-crypto-gold" id="future-balance">₹0</span>
+                    </div>
+                    <!-- Empty card for 2x3 grid symmetry on large screens -->
+                    <div class="hidden lg:block"></div>
+                  </div>
+                </div>
+
+                <!-- Filter Bar -->
+                <div class="flex flex-wrap gap-2 mb-6" id="trade-filter-bar">
+                  <button class="filter-btn px-4 py-2 rounded-lg font-semibold bg-crypto-blue text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-crypto-blue" data-filter="today">Today</button>
+                  <button class="filter-btn px-4 py-2 rounded-lg font-semibold bg-gray-200 dark:bg-dark-card text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-crypto-blue" data-filter="yesterday">Yesterday</button>
+                  <button class="filter-btn px-4 py-2 rounded-lg font-semibold bg-gray-200 dark:bg-dark-card text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-crypto-blue" data-filter="last7">Last 7 Days</button>
+                </div>
+
+                <!-- Trades Table -->
+                <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 border dark:border-dark-border">
+                    <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Recent Trades</h3>
+                    <div id="trades-table" class="overflow-x-auto">
+                        <div class="flex items-center justify-center py-8">
+                            <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-crypto-blue"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Content -->
+        <div id="settings-content" class="hidden max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">User Settings</h2>
+            
+            <!-- User Profile Card -->
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 mb-6 border dark:border-dark-border">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Profile Information</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
+                        <p id="profile-email" class="text-gray-900 dark:text-white font-medium">Loading...</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Account Created</label>
+                        <p id="profile-created" class="text-gray-600 dark:text-gray-400">Loading...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Weex API Settings -->
+            <div class="bg-white dark:bg-dark-card rounded-xl shadow-lg p-6 border dark:border-dark-border">
+                <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">Weex API Configuration</h3>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                        <p id="api-key-display" class="text-gray-600 dark:text-gray-400 font-mono">Not configured</p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secret Key</label>
+                        <p id="secret-key-display" class="text-gray-600 dark:text-gray-400 font-mono">Not configured</p>
+                    </div>
+                    
+                    <!-- API Configuration Form -->
+                    <div class="mt-6 p-4 bg-yellow-50 dark:bg-yellow-900 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+                        <h4 class="text-lg font-medium text-yellow-800 dark:text-yellow-200 mb-2">Connect Weex API</h4>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-300 mb-4">
+                            Enter your Weex API credentials to automatically fetch your trading data.
+                        </p>
+                        <form id="api-config-form" class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">API Key</label>
+                                <input type="text" id="weex-api-key" placeholder="Enter your Weex API key"
+                                       class="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Secret Key</label>
+                                <input type="password" id="weex-secret-key" placeholder="Enter your Weex secret key"
+                                       class="w-full px-4 py-2 border border-gray-300 dark:border-dark-border rounded-lg focus:ring-2 focus:ring-crypto-blue focus:border-transparent bg-white dark:bg-dark-bg text-gray-900 dark:text-white">
+                            </div>
+                            <button type="submit" id="save-api-config-btn"
+                                    class="bg-crypto-blue text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-700 transition duration-200">
+                                Save Configuration
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
+
+    <!-- Firebase SDKs -->
+    <script type="module" src="firebase-config.js"></script>
+    <script type="module" src="auth.js"></script>
+    <script type="module" src="dashboard.js"></script>
+    <script type="module" src="app.js"></script>
+    <script>
+// Trade filter logic
+function getDateString(date) {
+  return date.toISOString().slice(0, 10);
+}
+function isToday(dateStr) {
+  const today = new Date();
+  return dateStr === getDateString(today);
+}
+function isYesterday(dateStr) {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  return dateStr === getDateString(yesterday);
+}
+function isLast7Days(dateStr) {
+  const today = new Date();
+  const d = new Date(dateStr);
+  const diff = (today - d) / (1000 * 60 * 60 * 24);
+  return diff >= 0 && diff < 7;
+}
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('bg-crypto-blue', 'text-white'));
+    this.classList.add('bg-crypto-blue', 'text-white');
+    const filter = this.getAttribute('data-filter');
+    document.querySelectorAll('#trades-table .trade-card').forEach(card => {
+      const date = card.getAttribute('data-date');
+      let show = false;
+      if (filter === 'today') show = isToday(date);
+      else if (filter === 'yesterday') show = isYesterday(date);
+      else if (filter === 'last7') show = isLast7Days(date);
+      card.style.display = show ? '' : 'none';
+    });
+  });
+});
+</script>
+</body>
+</html>
